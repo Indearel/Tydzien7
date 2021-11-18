@@ -1,34 +1,7 @@
 import React from "react";
-import uuid from "uuid";
+import TimeboxesAPI from "../api/FakeTimeBoxesApi";
 import Timebox from "./Timebox";
 import TimeboxCreator from "./TimeboxCreator";
-
-function wait(ms=1000) {
-    return new Promise(
-        (resolve) => {
-            setTimeout(resolve, ms);
-        }
-    )
-}
-const timeboxes = [
-    { "id": 1, "title": "Uczę się o promises", "totalTimeInMinutes": 25 },
-    { "id": 2, "title": "Poznaję REST API", "totalTimeInMinutes": 10 },
-    { "id": 3, "title": "Ćwiczę async/await", "totalTimeInMinutes": 15 },
-    { "id": 4, "title": "Uczę się fetch", "totalTimeInMinutes": 5 }
-];
-
-const TimeboxesAPI = {
-    getAllTimeboxes: async function (){
-        await wait(1000);
-        return [...timeboxes];
-    },
-    addTimebox: async function (timeboxToAdd) {
-        await wait(1000);
-        const addedTimebox = {...timeboxToAdd, id: uuid.v4()};
-        timeboxes.push(addedTimebox);
-        return addedTimebox;
-    }
-}
 
 class TimeboxList extends React.Component {
     state = {
@@ -56,18 +29,24 @@ class TimeboxList extends React.Component {
         )    
     }
     removeTimebox = (indexToRemove) => {
-        this.setState(prevState => {
-            const timeboxes = prevState.timeboxes.filter((timebox, index) => index !== indexToRemove);
-            return { timeboxes };
-        })
-    }
-    updateTimebox = (indexToUpdate, updatedTimebox) => {
-        this.setState(prevState => {
-            const timeboxes = prevState.timeboxes.map((timebox, index) =>
-                index === indexToUpdate ? updatedTimebox : timebox
+        TimeboxesAPI.removeTimebox(this.state.timeboxes[indexToRemove])
+            .then(
+                () => this.setState(prevState => {
+                    const timeboxes = prevState.timeboxes.filter((timebox, index) => index !== indexToRemove);
+                    return { timeboxes };
+                })
             )
-            return { timeboxes };
-        })
+    }
+    updateTimebox = (indexToUpdate, timeboxToUpdate) => {
+        TimeboxesAPI.replaceTimebox(timeboxToUpdate)
+        .then (
+            (updatedTimebox) => this.setState(prevState => {
+                const timeboxes = prevState.timeboxes.map((timebox, index) =>
+                    index === indexToUpdate ? updatedTimebox : timebox
+                )
+                return { timeboxes };
+            })
+        )
     }
 
     handleCreate = (createdTimebox) => {
